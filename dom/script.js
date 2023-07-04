@@ -1,22 +1,30 @@
 class DomElement {
     constructor(type, attrs, children) {
-        this.type = type
-        this.attrs = attrs
-        this.children = children
+        this.type = type;
+        this.attrs = attrs;
+        this.children = children;
     }
 
     draw() {
-        const element = document.createElement(this.type)
-        Object.keys(this.attrs).map(attr => element.setAttribute(attr, this.attrs[attr]))
+        const element = document.createElement(this.type);
+        Object.keys(this.attrs).forEach(attr => element.setAttribute(attr, this.attrs[attr]));
 
-        if (this.children === undefined) {
-            const newElement = this.children.draw()
-            element.append(newElement)
-        } else if (typeof this.children === String) {
-            element.textContent = this.children
+        if (this.children === undefined || this.children === null) {
+            return element;
+        } else if (typeof this.children === 'string') {
+            element.textContent = this.children;
+        } else if (Array.isArray(this.children)) {
+            this.children.forEach(child => {
+                const newElement = new elements[child.type](child.attrs, child.children);
+                element.append(newElement.draw());
+            });
+        } else {
+            console.log(this.children);
+            const newElement = new elements[this.children.type](this.children.attrs, this.children.children);
+            element.append(newElement.draw());
         }
 
-        return element
+        return element;
     }
 }
 
@@ -481,6 +489,11 @@ const elements = {
             super('sub', attrs, children);
         }
     },
+    submit: class Submit extends DomElement {
+        constructor(attrs, children) {
+            super('submit', attrs, children);
+        }
+    },
     summary: class Summary extends DomElement {
         constructor(attrs, children) {
             super('summary', attrs, children);
@@ -583,9 +596,8 @@ const el = (type, attrs, children) => {
     return new elements[type](attrs, children);
 }
 
-const tree1 = el(
-    "div",
-    { "class": "some_classname", "id": "some_id" },
-    el("span", {}, "hello")
+const tree =
+el("div", {"class": "some_classname", "id": "some_id"},
+  el("span", {}, 'hello')
 );
-document.getElementById("root").append(tree1.draw());
+document.getElementById("root").appendChild(tree.draw());
